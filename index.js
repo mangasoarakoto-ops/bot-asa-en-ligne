@@ -92,3 +92,4 @@ app.get('/api/chat', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Bot mandeha eo amin'ny port ' + PORT));
+
