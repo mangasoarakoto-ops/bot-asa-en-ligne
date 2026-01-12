@@ -9,7 +9,7 @@ app.use(express.json());
 
 const URL_SITE = 'https://asaenlignemadaga.is-great.net/index.html?i=1';
 
-// 1. INTERFACE (Ny pejy ho hitan'ny client)
+// 1. INTERFACE (Hitan'ny Client)
 app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -17,35 +17,35 @@ app.get('/', (req, res) => {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Asa En Ligne Bot</title>
+            <title>Asa En Ligne Bot Intelligence</title>
             <style>
-                body { font-family: sans-serif; background: #e5ddd5; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-                header { background: #075e54; color: white; padding: 15px; text-align: center; font-size: 1.2em; }
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #ece5dd; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+                header { background: #075e54; color: white; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
                 #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-                .msg { padding: 10px; border-radius: 10px; max-width: 85%; word-wrap: break-word; }
-                .user { align-self: flex-end; background: #dcf8c6; color: #000; }
-                .bot { align-self: flex-start; background: #fff; color: #000; }
-                .input-area { background: #f0f0f0; padding: 10px; display: flex; gap: 5px; }
-                input { flex: 1; border: none; padding: 12px; border-radius: 25px; outline: none; }
-                button { background: #075e54; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; }
+                .msg { padding: 12px; border-radius: 15px; max-width: 85%; font-size: 15px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+                .user { align-self: flex-end; background: #dcf8c6; color: #000; border-bottom-right-radius: 2px; }
+                .bot { align-self: flex-start; background: #fff; color: #000; border-bottom-left-radius: 2px; }
+                .input-area { background: #f0f0f0; padding: 15px; display: flex; gap: 10px; align-items: center; }
+                input { flex: 1; border: none; padding: 12px 20px; border-radius: 30px; outline: none; font-size: 15px; }
+                button { background: #128c7e; color: white; border: none; padding: 12px 20px; border-radius: 50%; cursor: pointer; font-weight: bold; }
             </style>
         </head>
         <body>
-            <header>BOT ASA EN LIGNE MG</header>
+            <header>BOT INTELLIGENT (Site + Google Search)</header>
             <div id="chat-box">
-                <div class="msg bot">Salama! Inona no fanontaniana anananao?</div>
+                <div class="msg bot">Salama! Inona no fanontaniana anananao? Hitady ny valiny ao amin'ny site sy ny Google aho.</div>
             </div>
             <div class="input-area">
                 <input type="text" id="userInput" placeholder="Manorata eto...">
-                <button onclick="sendMsg()">Alefa</button>
+                <button onclick="sendMsg()">➤</button>
             </div>
             <script>
                 async function sendMsg() {
                     const input = document.getElementById('userInput');
                     const chatBox = document.getElementById('chat-box');
-                    if (!input.value.trim()) return;
+                    const text = input.value.trim();
+                    if (!text) return;
 
-                    const text = input.value;
                     chatBox.innerHTML += '<div class="msg user">' + text + '</div>';
                     input.value = '';
                     chatBox.scrollTop = chatBox.scrollHeight;
@@ -65,28 +65,43 @@ app.get('/', (req, res) => {
     `);
 });
 
-// 2. LOGIQUE (Fikarohana ao amin'ny site)
+// 2. LOGIQUE FIKAROHANA (Site + Internet)
 app.get('/api/search', async (req, res) => {
     const query = req.query.q ? req.query.q.toLowerCase() : "";
+    
     try {
-        const response = await axios.get(URL_SITE);
-        const $ = cheerio.load(response.data);
-        let results = "";
+        // DINGANA 1: Fikarohana ao amin'ny SITE-nao
+        const siteResponse = await axios.get(URL_SITE);
+        const $ = cheerio.load(siteResponse.data);
+        let siteResult = "";
 
-        // Mitady ny teny fanalahidy ao amin'ny HTML
-        $('p, h1, h2, h3, li, span').each((i, el) => {
+        $('p, h1, h2, h3, li').each((i, el) => {
             const content = $(el).text();
-            if (content.toLowerCase().includes(query) && results.length < 1000) {
-                results += content.trim() + " ";
+            if (content.toLowerCase().includes(query) && siteResult.length < 500) {
+                siteResult += content.trim() + " ";
             }
         });
 
-        const finalReply = results ? results : "Miala tsiny, tsy hitako ao amin'ny site ny valin'izany.";
-        res.json({ reply: finalReply });
+        if (siteResult) {
+            return res.json({ reply: "🔎 <b>Hita ao amin'ny site:</b><br>" + siteResult });
+        }
+
+        // DINGANA 2: Raha tsy hita ao amin'ny site, mitady amin'ny DUCKDUCKGO (Toy ny Google)
+        const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`;
+        const webResponse = await axios.get(searchUrl);
+        
+        let webResult = webResponse.data.AbstractText;
+
+        if (webResult) {
+            res.json({ reply: "🌐 <b>Hita tamin'ny Google/Internet:</b><br>" + webResult });
+        } else {
+            res.json({ reply: "Miala tsiny, na tany amin'ny site na tany amin'ny internet dia tsy nahita valiny mazava aho momba ny '" + query + "'." });
+        }
+
     } catch (err) {
-        res.json({ reply: "Tsy afaka mamaky ny site aho izao." });
+        res.json({ reply: "Nisy olana teo am-pikarohana ny valiny." });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('Server is running...'));
+app.listen(PORT, () => console.log('Server running...'));
