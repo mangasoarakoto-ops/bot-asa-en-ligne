@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const URL_SITE = 'asaenlignemadaga.is-great.net'; // Ny domain fotsiny
+const URL_SITE = 'https://asa-en-ligne-six.vercel.app/micotache.html'; // Ny domain fotsiny
 
 app.get('/', (req, res) => {
     res.send(`
