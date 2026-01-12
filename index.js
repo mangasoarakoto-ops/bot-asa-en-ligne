@@ -7,57 +7,59 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const URL_SITE = 'https://asaenlignemadaga.is-great.net/index.html?i=1';
+const URL_SITE = 'https://asa-en-ligne-six.vercel.app/micotache.html';
 
-// 1. INTERFACE (Hitan'ny Client)
 app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
-        <html lang="mg">
+        <html>
         <head>
-            <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Asa En Ligne Bot Intelligence</title>
+            <title>Bot Intelligent</title>
             <style>
-                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #ece5dd; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-                header { background: #075e54; color: white; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-                #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-                .msg { padding: 12px; border-radius: 15px; max-width: 85%; font-size: 15px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-                .user { align-self: flex-end; background: #dcf8c6; color: #000; border-bottom-right-radius: 2px; }
-                .bot { align-self: flex-start; background: #fff; color: #000; border-bottom-left-radius: 2px; }
-                .input-area { background: #f0f0f0; padding: 15px; display: flex; gap: 10px; align-items: center; }
-                input { flex: 1; border: none; padding: 12px 20px; border-radius: 30px; outline: none; font-size: 15px; }
-                button { background: #128c7e; color: white; border: none; padding: 12px 20px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+                body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+                .chat-header { background: #0084ff; color: white; padding: 15px; text-align: center; font-weight: bold; }
+                #chat-box { flex: 1; overflow-y: auto; padding: 15px; }
+                .message { margin-bottom: 15px; padding: 10px; border-radius: 10px; max-width: 80%; line-height: 1.5; }
+                .user-msg { background: #0084ff; color: white; align-self: flex-end; margin-left: auto; }
+                .bot-msg { background: white; color: #333; border: 1px solid #ddd; }
+                .input-container { background: white; padding: 10px; display: flex; border-top: 1px solid #ddd; }
+                input { flex: 1; border: 1px solid #ddd; padding: 12px; border-radius: 20px; outline: none; }
+                button { background: #0084ff; color: white; border: none; padding: 0 20px; border-radius: 20px; margin-left: 5px; cursor: pointer; }
+                .source { font-size: 0.8em; color: #888; margin-top: 5px; display: block; }
             </style>
         </head>
         <body>
-            <header>BOT INTELLIGENT (Site + Google Search)</header>
-            <div id="chat-box">
-                <div class="msg bot">Salama! Inona no fanontaniana anananao? Hitady ny valiny ao amin'ny site sy ny Google aho.</div>
-            </div>
-            <div class="input-area">
+            <div class="chat-header">ASSISTANCE INTELLIGENTE</div>
+            <div id="chat-box"></div>
+            <div class="input-container">
                 <input type="text" id="userInput" placeholder="Manorata eto...">
-                <button onclick="sendMsg()">➤</button>
+                <button onclick="send()">Alefa</button>
             </div>
             <script>
-                async function sendMsg() {
-                    const input = document.getElementById('userInput');
-                    const chatBox = document.getElementById('chat-box');
-                    const text = input.value.trim();
-                    if (!text) return;
-
-                    chatBox.innerHTML += '<div class="msg user">' + text + '</div>';
-                    input.value = '';
+                const chatBox = document.getElementById('chat-box');
+                function addMessage(text, type) {
+                    const div = document.createElement('div');
+                    div.className = 'message ' + (type === 'user' ? 'user-msg' : 'bot-msg');
+                    div.innerHTML = text;
+                    chatBox.appendChild(div);
                     chatBox.scrollTop = chatBox.scrollHeight;
+                }
+
+                async function send() {
+                    const input = document.getElementById('userInput');
+                    const q = input.value.trim();
+                    if(!q) return;
+                    addMessage(q, 'user');
+                    input.value = '';
 
                     try {
-                        const response = await fetch('/api/search?q=' + encodeURIComponent(text));
-                        const data = await response.json();
-                        chatBox.innerHTML += '<div class="msg bot">' + data.reply + '</div>';
-                    } catch (e) {
-                        chatBox.innerHTML += '<div class="msg bot">Miala tsiny, nisy olana teknika kely.</div>';
+                        const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+                        const data = await res.json();
+                        addMessage(data.reply, 'bot');
+                    } catch(e) {
+                        addMessage("Nisy olana kely ny fifandraisana.", 'bot');
                     }
-                    chatBox.scrollTop = chatBox.scrollHeight;
                 }
             </script>
         </body>
@@ -65,43 +67,45 @@ app.get('/', (req, res) => {
     `);
 });
 
-// 2. LOGIQUE FIKAROHANA (Site + Internet)
 app.get('/api/search', async (req, res) => {
-    const query = req.query.q ? req.query.q.toLowerCase() : "";
+    const query = req.query.q.toLowerCase();
     
     try {
-        // DINGANA 1: Fikarohana ao amin'ny SITE-nao
-        const siteResponse = await axios.get(URL_SITE);
-        const $ = cheerio.load(siteResponse.data);
-        let siteResult = "";
+        // 1. Manandrana mamaky ny site-nao aloha
+        // Mampiasa 'User-Agent' mba tsy ho sakanan'ny hosting-nao
+        const siteRes = await axios.get(URL_SITE, {
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+        });
+        const $ = cheerio.load(siteRes.data);
+        let siteContent = "";
 
+        // Mitady teny mitovy (Intelligence tsotra)
         $('p, h1, h2, h3, li').each((i, el) => {
-            const content = $(el).text();
-            if (content.toLowerCase().includes(query) && siteResult.length < 500) {
-                siteResult += content.trim() + " ";
+            const txt = $(el).text();
+            if (txt.toLowerCase().includes(query)) {
+                siteContent += txt.trim() + " ";
             }
         });
 
-        if (siteResult) {
-            return res.json({ reply: "🔎 <b>Hita ao amin'ny site:</b><br>" + siteResult });
+        if (siteContent.length > 10) {
+            return res.json({ reply: siteContent + "<br><span class='source'>(Loharano: Site-nao)</span>" });
         }
 
-        // DINGANA 2: Raha tsy hita ao amin'ny site, mitady amin'ny DUCKDUCKGO (Toy ny Google)
-        const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`;
-        const webResponse = await axios.get(searchUrl);
-        
-        let webResult = webResponse.data.AbstractText;
+        // 2. RAHA TSY HITA AO, MITADY AMIN'NY INTERNET (DuckDuckGo/Google)
+        const webRes = await axios.get(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`);
+        let webText = webRes.data.AbstractText;
 
-        if (webResult) {
-            res.json({ reply: "🌐 <b>Hita tamin'ny Google/Internet:</b><br>" + webResult });
+        if (webText) {
+            return res.json({ reply: webText + "<br><span class='source'>(Loharano: Google/Internet)</span>" });
         } else {
-            res.json({ reply: "Miala tsiny, na tany amin'ny site na tany amin'ny internet dia tsy nahita valiny mazava aho momba ny '" + query + "'." });
+            // 3. Raha mbola tsy hita ihany, manome valiny feno (Fallback)
+            return res.json({ reply: "Tsy nahita valiny mazava aho, fa azonao jerena mivantana ato: " + URL_SITE });
         }
 
     } catch (err) {
-        res.json({ reply: "Nisy olana teo am-pikarohana ny valiny." });
+        res.json({ reply: "Miala tsiny, nisy olana teo am-pikarohana." });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('Server running...'));
+app.listen(PORT, () => console.log('Bot Live!'));
