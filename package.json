@@ -1,0 +1,15 @@
+{
+  "name": "bot-asa-web",
+  "version": "1.0.0",
+  "description": "Bot hiresahana amin'ny client",
+  "main": "index.js",
+  "dependencies": {
+    "axios": "^1.4.0",
+    "cheerio": "^1.0.0-rc.12",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
