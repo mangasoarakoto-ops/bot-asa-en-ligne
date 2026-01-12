@@ -7,66 +7,66 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const URL_SITE = 'https://asa-en-ligne-six.vercel.app/micotache.html';
+const URL_SITE = 'asaenlignemadaga.is-great.net'; // Ny domain fotsiny
 
 app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
-        <html lang="mg">
+        <html>
         <head>
-            <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>AI Bot - Asa En Ligne</title>
             <style>
-                body { font-family: 'Segoe UI', sans-serif; background: #e5ddd5; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-                header { background: #075e54; color: white; padding: 15px; text-align: center; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-                #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-                .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; position: relative; font-size: 15px; line-height: 1.5; }
-                .user { align-self: flex-end; background: #dcf8c6; color: #000; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-                .bot { align-self: flex-start; background: #fff; color: #000; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-                .typing { font-style: italic; color: #555; font-size: 13px; margin-bottom: 10px; display: none; }
-                .input-area { background: #f0f0f0; padding: 10px; display: flex; gap: 10px; }
+                body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #e5ddd5; margin: 0; }
+                header { background: #075e54; color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; }
+                #chat-box { height: calc(100vh - 130px); overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+                .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+                .user { align-self: flex-end; background: #dcf8c6; }
+                .bot { align-self: flex-start; background: white; }
+                .loading { font-style: italic; color: #666; font-size: 12px; display: none; margin-left: 20px; }
+                .input-area { background: #f0f0f0; padding: 10px; display: flex; position: fixed; bottom: 0; width: 100%; box-sizing: border-box; }
                 input { flex: 1; border: none; padding: 12px; border-radius: 25px; outline: none; }
-                button { background: #075e54; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; }
-                .source-tag { font-size: 0.7em; color: #075e54; font-weight: bold; display: block; margin-top: 5px; text-transform: uppercase; }
+                button { background: #075e54; color: white; border: none; padding: 10px 20px; border-radius: 25px; margin-left: 5px; cursor: pointer; }
+                
+                /* Animation dots */
+                .dot { height: 8px; width: 8px; background-color: #333; border-radius: 50%; display: inline-block; animation: bounce 1.4s infinite ease-in-out both; }
+                .dot:nth-child(1) { animation-delay: -0.32s; }
+                .dot:nth-child(2) { animation-delay: -0.16s; }
+                @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
             </style>
         </head>
         <body>
-            <header>ASSISTANCE INTELLIGENTE v2</header>
+            <header>BOT INTELLIGENT v3</header>
             <div id="chat-box">
-                <div class="msg bot">Salama! Inona no fanontaniana anananao? Afaka manontany fehezanteny lava ianao.</div>
+                <div class="msg bot">Salama tompoko! Afaka manampy anao amin'ny fanontaniana rehetra aho.</div>
             </div>
-            <div id="typing-indicator" class="typing" style="margin-left: 20px;">Bot eo am-pikarohana ny valiny...</div>
+            <div id="loading" class="loading">
+                Bot eo am-pikarohana ny valiny <span class="dot"></span> <span class="dot"></span> <span class="dot"></span>
+            </div>
             <div class="input-area">
-                <input type="text" id="userInput" placeholder="Soraty ny fanontanianao...">
+                <input type="text" id="userInput" placeholder="Manorata fehezanteny...">
                 <button onclick="send()">Alefa</button>
             </div>
-
             <script>
                 async function send() {
                     const input = document.getElementById('userInput');
                     const chatBox = document.getElementById('chat-box');
-                    const typing = document.getElementById('typing-indicator');
+                    const loader = document.getElementById('loading');
                     const q = input.value.trim();
                     if(!q) return;
 
-                    // User Message
                     chatBox.innerHTML += '<div class="msg user">' + q + '</div>';
                     input.value = '';
+                    loader.style.display = 'block';
                     chatBox.scrollTop = chatBox.scrollHeight;
 
-                    // Show typing
-                    typing.style.display = 'block';
-
                     try {
-                        const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+                        const res = await fetch('/api/chat?q=' + encodeURIComponent(q));
                         const data = await res.json();
-                        
-                        typing.style.display = 'none';
+                        loader.style.display = 'none';
                         chatBox.innerHTML += '<div class="msg bot">' + data.reply + '</div>';
                     } catch(e) {
-                        typing.style.display = 'none';
-                        chatBox.innerHTML += '<div class="msg bot">Miala tsiny, nisy olana teknika.</div>';
+                        loader.style.display = 'none';
+                        chatBox.innerHTML += '<div class="msg bot">Miala tsiny, nisy olana kely ny internet.</div>';
                     }
                     chatBox.scrollTop = chatBox.scrollHeight;
                 }
@@ -76,52 +76,40 @@ app.get('/', (req, res) => {
     `);
 });
 
-app.get('/api/search', async (req, res) => {
-    const rawQuery = req.query.q || "";
-    const query = rawQuery.toLowerCase();
-    
-    // Introduction list
-    const introPos = ["Niditra nandinika ny site aho ary nahita ity:", "Ity ny valiny hita ao amin'ny site-nay:", "Araka ny fikarohana nataoko, ity ny vaovao azo:"];
-    const introNeg = ["Tsy nahita an'izany tao amin'ny site aho, fa ity kosa ny valiny tany amin'ny Google:", "Miala tsiny fa tsy ato amin'ny site no misy an'izany, fa ity misy fanazavana hafa:", "Indro ny valiny hitako tany amin'ny Internet:"];
+app.get('/api/chat', async (req, res) => {
+    const q = req.query.q.toLowerCase();
+    const introsPos = ["Niditra nandinika ny site aho ary nahita ity:", "Ity ny vaovao hita ao amin'ny site-nay:", "Araka ny fikarohana nataoko, ity ny valiny:"];
+    const introsNeg = ["Tsy nahita an'izany tao amin'ny site aho, fa ity kosa ny valiny tany amin'ny Google:", "Indro ny valiny hitako tany amin'ny Internet:", "Mbola eo am-panavaozana ny site izahay, fa ity aloha ny valiny hitako any ivelany:"];
 
     try {
-        // 1. Fikarohana ao amin'ny Site (Mampiasa keywords)
-        const siteRes = await axios.get(URL_SITE, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-        const $ = cheerio.load(siteRes.data);
-        let siteContent = "";
+        // 1. DINGANA: Fikarohana amin'ny Internet mivantana (DuckDuckGo) 
+        // Satria sakanan'ny InfinityFree ny Bot, dia mampiasa an'ity ho Google Search isika
+        const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(q + " site:" + URL_SITE)}&format=json&no_html=1`;
+        const webRes = await axios.get(searchUrl);
         
-        // Zaraina ho teny maromaro ilay fehezanteny (keywords)
-        const keywords = query.split(' ').filter(word => word.length > 3);
+        let reply = "";
+        let intro = "";
 
-        $('p, h1, h2, h3, li').each((i, el) => {
-            const txt = $(el).text();
-            // Raha misy iray amin'ireo keywords fotsiny aza dia alaina
-            const hita = keywords.some(word => txt.toLowerCase().includes(word));
-            if (hita && siteContent.length < 600) {
-                siteContent += txt.trim() + " ";
-            }
-        });
-
-        if (siteContent.length > 10) {
-            const intro = introPos[Math.floor(Math.random() * introPos.length)];
-            return res.json({ reply: `✨ <b>${intro}</b><br><br>${siteContent}<br><span class="source-tag">Loharano: Site-nao</span>` });
-        }
-
-        // 2. RAHA TSY HITA AO, GOOGLE / DUCKDUCKGO
-        const webRes = await axios.get(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`);
-        let webText = webRes.data.AbstractText;
-
-        if (webText) {
-            const intro = introNeg[Math.floor(Math.random() * introNeg.length)];
-            return res.json({ reply: `🌐 <b>${intro}</b><br><br>${webText}<br><span class="source-tag">Loharano: Google/Internet</span>` });
+        if (webRes.data.AbstractText) {
+            // Raha mahita valiny ao amin'ilay site amin'ny alalan'ny Search Engine izy
+            intro = introsPos[Math.floor(Math.random() * introsPos.length)];
+            reply = `✨ <b>${intro}</b><br><br>${webRes.data.AbstractText}`;
         } else {
-            return res.json({ reply: "Miala tsiny, tsy nahita valiny mazava aho na tany amin'ny site na tany amin'ny Google. Afaka manandrana teny hafa ve ianao?" });
+            // 2. DINGANA: Raha tsy mahita ao amin'ny site dia mitady amin'ny Internet malalaka
+            const generalRes = await axios.get(`https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1`);
+            if (generalRes.data.AbstractText) {
+                intro = introsNeg[Math.floor(Math.random() * introsNeg.length)];
+                reply = `🌐 <b>${intro}</b><br><br>${generalRes.data.AbstractText}`;
+            } else {
+                // Raha tsy mahita mihitsy na dia any amin'ny Google aza
+                reply = "Miala tsiny, tena tsy nahita valiny mazava aho na dia efa nitady tany amin'ny Google aza. Azonao ovaina kely ve ny fanontanianao?";
+            }
         }
-
-    } catch (err) {
-        res.json({ reply: "Nisy olana teo am-pikarohana ny valiny." });
+        res.json({ reply: reply });
+    } catch (e) {
+        res.json({ reply: "Nisy olana teknika teo am-pikarohana." });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('Bot Active'));
+app.listen(PORT, () => console.log('Server Live'));
